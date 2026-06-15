@@ -54,7 +54,15 @@ export default function AdminDashboard() {
     e.preventDefault();
     setError('');
     try {
-      await api.post('/admin/users', { name, email, password, role, branchId: branchId || null, salary: salary ? parseFloat(salary) : undefined });
+      const selectedBranchId = branchId ? Number(branchId) : null;
+      await api.post('/admin/users', {
+        name,
+        email,
+        password,
+        role,
+        branchId: selectedBranchId,
+        salary: salary ? parseFloat(salary) : undefined,
+      });
       setMessage('User created successfully.');
       setName(''); setEmail(''); setPassword(''); setRole('CUSTOMER'); setBranchId(''); setSalary('');
       refresh();

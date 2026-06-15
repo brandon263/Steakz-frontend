@@ -302,7 +302,7 @@ export default function BranchManagerDashboard() {
                           className="form-input"
                           value={newItemName}
                           onChange={e => setNewItemName(e.target.value)}
-                          placeholder="Enter item name"
+                          placeholder="Type here..."
                           required
                         />
                       </div>
@@ -331,7 +331,7 @@ export default function BranchManagerDashboard() {
                           className="form-input"
                           value={newItemPrice}
                           onChange={e => setNewItemPrice(e.target.value)}
-                          placeholder="0.00"
+                          placeholder="0"
                           required
                         />
                       </div>
@@ -341,7 +341,7 @@ export default function BranchManagerDashboard() {
                           className="form-input"
                           value={newItemDescription}
                           onChange={e => setNewItemDescription(e.target.value)}
-                          placeholder="Optional description"
+                          placeholder="Type here..."
                           rows={4}
                         />
                       </div>

@@ -52,11 +52,11 @@ export default function ManagerMenuPage() {
       <h1>Manage Menu</h1>
 
       <form onSubmit={handleCreate} style={{ marginBottom: '1.2rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '.5rem' }}>
-        <input placeholder="Name" value={form.name} onChange={e=>setForm(f=>({ ...f, name: e.target.value }))} required />
-        <input placeholder="Category" value={form.category} onChange={e=>setForm(f=>({ ...f, category: e.target.value }))} required />
-        <input type="number" step="0.01" placeholder="Price" value={form.price || ''} onChange={e=>setForm(f=>({ ...f, price: parseFloat(e.target.value) }))} required />
+        <input placeholder="Type here..." value={form.name} onChange={e=>setForm(f=>({ ...f, name: e.target.value }))} required />
+        <input placeholder="Type here..." value={form.category} onChange={e=>setForm(f=>({ ...f, category: e.target.value }))} required />
+        <input type="number" step="0.01" placeholder="0" value={form.price || ''} onChange={e=>setForm(f=>({ ...f, price: parseFloat(e.target.value) }))} required />
         <button className="btn btn-primary">Add</button>
-        <input placeholder="Description" value={form.description} onChange={e=>setForm(f=>({ ...f, description: e.target.value }))} style={{ gridColumn: '1 / -1' }} />
+        <input placeholder="Type here..." value={form.description} onChange={e=>setForm(f=>({ ...f, description: e.target.value }))} style={{ gridColumn: '1 / -1' }} />
       </form>
 
       <div className="card-grid">
