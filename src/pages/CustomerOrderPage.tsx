@@ -33,7 +33,13 @@ export default function CustomerOrderPage() {
   const [cart, setCart] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'IN_STORE' | null>(null);
+  const [showCardModal, setShowCardModal] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvv, setCvv] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -83,7 +89,7 @@ export default function CustomerOrderPage() {
   };
 
   const handleSubmit = async () => {
-    if (!booking) return;
+    if (!booking || !paymentMethod) return;
     setError('');
     if (Object.keys(cart).length === 0) {
       setError('Add at least one menu item to the cart.');
@@ -95,11 +101,43 @@ export default function CustomerOrderPage() {
     }));
 
     try {
-      await api.post('/customer/orders', { bookingId: booking.id, items });
-      setSuccess('Order submitted successfully! Redirecting back to your dashboard...');
-      setTimeout(() => navigate('/customer'), 1800);
+      setIsSubmitting(true);
+      const response = await api.post('/customer/orders', {
+        bookingId: booking.id,
+        items,
+        paymentMethod,
+        paymentStatus: paymentMethod === 'IN_STORE' ? 'PAID_IN_STORE' : 'PENDING',
+      });
+
+      if (paymentMethod === 'CARD') {
+        setPendingOrderId(response.data.id);
+        setShowCardModal(true);
+      } else {
+        navigate('/customer');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to submit order.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCardPayment = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (pendingOrderId === null) return;
+
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await api.post(`/customer/orders/${pendingOrderId}/pay`, {
+        paymentMethod: 'CARD',
+        paymentStatus: 'PAID',
+      });
+      navigate('/customer');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to process the mock payment.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -125,7 +163,6 @@ export default function CustomerOrderPage() {
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
 
       {booking ? (
         <>
@@ -189,13 +226,31 @@ export default function CustomerOrderPage() {
                     </div>
                   </div>
                 )}
+                <div className="payment-options">
+                  <label className="payment-option">
+                    <input
+                      type="checkbox"
+                      checked={paymentMethod === 'CARD'}
+                      onChange={() => setPaymentMethod(current => current === 'CARD' ? null : 'CARD')}
+                    />
+                    <span>Pay Online (Card)</span>
+                  </label>
+                  <label className="payment-option">
+                    <input
+                      type="checkbox"
+                      checked={paymentMethod === 'IN_STORE'}
+                      onChange={() => setPaymentMethod(current => current === 'IN_STORE' ? null : 'IN_STORE')}
+                    />
+                    <span>Pay in Store</span>
+                  </label>
+                </div>
                 <button
                   className="btn btn-primary"
-                  disabled={cartItems.length === 0 || booking.status !== 'CONFIRMED'}
+                  disabled={cartItems.length === 0 || booking.status !== 'CONFIRMED' || paymentMethod === null || isSubmitting}
                   onClick={handleSubmit}
                   style={{ width: '100%', marginTop: '1rem' }}
                 >
-                  Submit Order
+                  {isSubmitting ? 'Submitting...' : 'Submit Order'}
                 </button>
               </div>
             </div>
@@ -203,6 +258,61 @@ export default function CustomerOrderPage() {
         </>
       ) : (
         <div className="empty-state">Booking not found.</div>
+      )}
+      {showCardModal && (
+        <div className="payment-modal-backdrop">
+          <section className="payment-modal" role="dialog" aria-modal="true" aria-labelledby="card-payment-title">
+            <h2 id="card-payment-title">Card Details</h2>
+            <p className="page-description">Enter mock card details to complete your payment.</p>
+            {error && <div className="alert alert-error">{error}</div>}
+            <form onSubmit={handleCardPayment}>
+              <div className="form-group">
+                <label className="form-label" htmlFor="card-number">Card Number</label>
+                <input
+                  className="form-input"
+                  id="card-number"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="cc-number"
+                  required
+                  value={cardNumber}
+                  onChange={event => setCardNumber(event.target.value)}
+                />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="card-expiry">Expiry</label>
+                  <input
+                    className="form-input"
+                    id="card-expiry"
+                    type="text"
+                    placeholder="MM/YY"
+                    autoComplete="cc-exp"
+                    required
+                    value={expiry}
+                    onChange={event => setExpiry(event.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="card-cvv">CVV</label>
+                  <input
+                    className="form-input"
+                    id="card-cvv"
+                    type="password"
+                    inputMode="numeric"
+                    autoComplete="cc-csc"
+                    required
+                    value={cvv}
+                    onChange={event => setCvv(event.target.value)}
+                  />
+                </div>
+              </div>
+              <button className="btn btn-primary" type="submit" disabled={isSubmitting} style={{ width: '100%' }}>
+                {isSubmitting ? 'Processing...' : 'Pay Now'}
+              </button>
+            </form>
+          </section>
+        </div>
       )}
     </div>
   );

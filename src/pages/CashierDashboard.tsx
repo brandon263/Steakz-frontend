@@ -5,6 +5,7 @@ interface Order {
   id: number;
   total: number;
   status: string;
+  paymentStatus: 'PENDING' | 'PAID' | 'PAID_IN_STORE';
   createdAt: string;
   customer?: { name: string };
   items: { quantity: number; menuItem: { name: string } }[];
@@ -44,6 +45,7 @@ export default function CashierDashboard() {
   const [loading, setLoading] = useState(true);
   const [orderError, setOrderError] = useState('');
   const [orderSuccess, setOrderSuccess] = useState('');
+  const [deliveringOrderId, setDeliveringOrderId] = useState<number | null>(null);
 
   useEffect(() => {
     loadAll();
@@ -83,11 +85,19 @@ export default function CashierDashboard() {
   };
 
   const deliverOrder = async (id: number) => {
+    setOrderError('');
+    setOrderSuccess('');
+    setDeliveringOrderId(id);
     try {
-      await api.patch(`/cashier/orders/${id}/deliver`);
-      await loadOrders();
-    } catch (error) {
-      alert('Failed to mark as delivered');
+      const response = await api.patch<Order>(`/cashier/orders/${id}/deliver`);
+      setOrders(currentOrders => currentOrders.map(order => (
+        order.id === id ? { ...order, ...response.data } : order
+      )));
+      setOrderSuccess(`Order #${id} marked as delivered.`);
+    } catch (error: any) {
+      setOrderError(error.response?.data?.error || 'Failed to mark the order as delivered.');
+    } finally {
+      setDeliveringOrderId(null);
     }
   };
 
@@ -222,13 +232,14 @@ export default function CashierDashboard() {
                   <th>Items</th>
                   <th>Total</th>
                   <th>Status</th>
+                  <th>Payment Status</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: 'center' }}>No orders found</td>
+                    <td colSpan={7} style={{ textAlign: 'center' }}>No orders found</td>
                   </tr>
                 ) : (
                   orders.map(order => (
@@ -239,9 +250,21 @@ export default function CashierDashboard() {
                       <td>${order.total.toFixed(2)}</td>
                       <td><span className={`badge badge-${order.status.toLowerCase()}`}>{order.status}</span></td>
                       <td>
+                        {order.paymentStatus === 'PAID' && <span className="badge badge-paid">PAID</span>}
+                        {order.paymentStatus === 'PENDING' && <span className="badge badge-pending">PENDING</span>}
+                        {order.paymentStatus === 'PAID_IN_STORE' && (
+                          <span className="badge badge-pay-in-store">PAY IN STORE</span>
+                        )}
+                      </td>
+                      <td>
                         {order.status === 'DONE' && (
-                          <button className="btn btn-primary btn-sm" onClick={() => deliverOrder(order.id)}>
-                            Deliver
+                          <button
+                            className="btn btn-primary btn-sm"
+                            disabled={order.paymentStatus === 'PENDING' || deliveringOrderId === order.id}
+                            title={order.paymentStatus === 'PENDING' ? 'Payment must be completed before delivery.' : undefined}
+                            onClick={() => deliverOrder(order.id)}
+                          >
+                            {deliveringOrderId === order.id ? 'Delivering...' : 'Deliver'}
                           </button>
                         )}
                       </td>

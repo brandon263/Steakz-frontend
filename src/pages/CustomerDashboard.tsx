@@ -15,6 +15,7 @@ interface Order {
   id: number;
   total: number;
   status: string;
+  paymentStatus: 'PENDING' | 'PAID' | 'PAID_IN_STORE';
   createdAt: string;
   branch: { name: string };
   items: { quantity: number; menuItem: { name: string } }[];
@@ -168,7 +169,12 @@ export default function CustomerDashboard() {
             <div className="card" key={order.id}>
               <div className="card-header">
                 <span className="card-title">Order #{order.id}</span>
-                <span className={`badge badge-${order.status.toLowerCase()}`}>{order.status}</span>
+                <div className="order-badges">
+                  <span className={`badge badge-${order.status.toLowerCase()}`}>{order.status}</span>
+                  {order.paymentStatus === 'PAID' && <span className="badge badge-paid">PAID</span>}
+                  {order.paymentStatus === 'PENDING' && <span className="badge badge-pending">PENDING</span>}
+                  {order.paymentStatus === 'PAID_IN_STORE' && <span className="badge badge-pay-in-store">PAY IN STORE</span>}
+                </div>
               </div>
               <p>{order.branch.name}</p>
               <p>{order.items.map(item => `${item.menuItem.name} ×${item.quantity}`).join(', ')}</p>

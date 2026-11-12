@@ -644,6 +644,59 @@ h3 {
   border: 1px solid var(--error);
 }
 
+.badge-paid {
+  background: rgba(76, 175, 80, 0.15);
+  color: var(--success-light);
+  border: 1px solid var(--success-light);
+}
+
+.badge-pay-in-store {
+  background: rgba(33, 150, 243, 0.15);
+  color: #64b5f6;
+  border: 1px solid #64b5f6;
+}
+
+.order-badges {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.payment-options {
+  display: grid;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: pointer;
+}
+
+.payment-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.payment-modal {
+  width: 100%;
+  max-width: 480px;
+  padding: var(--space-xl);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
 /* Auth Pages */
 .auth-wrapper {
   min-height: 100vh;
